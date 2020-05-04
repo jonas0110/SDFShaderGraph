@@ -249,7 +249,7 @@ vik.ui = (function () {
         //addTopBarButton("change_canvas","fa fa-cubes","Canvas", {div_class:"pressed"});
         addTopBarButton("change_layout","fa fa-desktop","Full Screen");
         addTopBarButton("about","fa fa-info","About");
-        addTopBarButton("contact","fa fa-linkedin-square","Contact", {div_class:"contact", anchor_href:"284724960@qq.com"});
+        addTopBarButton("contact","fa fa-linkedin-square","Contact", {div_class:"contact", anchor_href:"mailto:284724960@qq.com"});
 
         $("#layout_layout2_panel_main .w2ui-panel-content").append('<div id="mesh-changer"></div>');
         addMeshChangerButton("sphere","fa fa-globe","Sphere");
