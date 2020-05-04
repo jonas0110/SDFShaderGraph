@@ -249,7 +249,7 @@ vik.ui = (function () {
         //addTopBarButton("change_canvas","fa fa-cubes","Canvas", {div_class:"pressed"});
         addTopBarButton("change_layout","fa fa-desktop","Full Screen");
         addTopBarButton("about","fa fa-info","About");
-        addTopBarButton("contact","fa fa-linkedin-square","Contact", {div_class:"contact", anchor_href:"https://www.linkedin.com/in/victhorlopez/"});
+        addTopBarButton("contact","fa fa-linkedin-square","Contact", {div_class:"contact", anchor_href:"https://www.linkedin.com/in/%E5%B2%B3%E6%9D%AD-%E8%B4%BE-022b5210a"});
 
         $("#layout_layout2_panel_main .w2ui-panel-content").append('<div id="mesh-changer"></div>');
         addMeshChangerButton("sphere","fa fa-globe","Sphere");
