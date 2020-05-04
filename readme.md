@@ -1,0 +1,32 @@
+<div>
+    <div class="w2ui-inner-popup">
+<h3>
+SDFShaderGraph Editor</h3>
+Node based Fragment and Signed Distance Field Shader Editor in webGL,a demo can be checked online on http://jonas0110.github.io/SDFShaderGraph/.
+this project base on Node-Based Shader Editor created by victhorlopez. 
+        <ul>
+            <li>Litegl.js(https://github.com/jagenjo/litegl.js) is a library that wraps WebGL to make it more user-friendly.</li>
+            <li>Litegraph.js(https://github.com/jagenjo/litegraph.js) is the core library of the project used to create graphs and nodes visually.</li>
+        </ul>
+<img src = "screen.png"></img>
+<h3>Other libraries</h3>
+The project includes some other libraries to fulfill other requirements
+ For the UI:
+        <ul>
+            <li>Dat.gui (https://code.google.com/p/dat-gui/)</li>
+            <li>w2ui (http://w2ui.com/web/)</li>
+        </ul>
+ For the icons:
+        <ul>
+            <li>Font-awesome: (http://fortawesome.github.io/Font-Awesome/)</li>
+        </ul>
+ General utility:
+        <ul>
+            <li>Jquery: (https://jquery.com/).</li>
+        </ul>
+        <h3>Assets</h3>
+
+The assets for the project all are extracted from the following links.
+ 
+    </div>
+</div>
