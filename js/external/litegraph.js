@@ -470,24 +470,27 @@ LiteGraph.createContextualMenu = function(values,options, ref_window)
     root.addEventListener("mouseover", function(e) {
         this.mouse_inside = true;
     });
-
+    
     root.addEventListener("mouseout", function(e) {
-        //console.log("OUT!");
+        console.log("OUT!");
         var aux = e.toElement;
+        console.log(e)
+        if(aux != null){
         while(aux != this && aux != ref_window.document)
             aux = aux.parentNode;
 
         if(aux == this) return;
+        }
         this.mouse_inside = false;
         if(!this.block_close)
             this.closeMenu();
     });
-
+    
     //insert before checking position
     ref_window.document.body.appendChild(root);
 
     var root_rect = root.getClientRects()[0];
-
+     
     //link menus
     if(options.from)
     {
@@ -496,26 +499,30 @@ LiteGraph.createContextualMenu = function(values,options, ref_window)
 
     var left = options.left || 0;
     var top = options.top || 0;
+    
     if(options.event)
     {
         left = (options.event.pageX - 10);
         top = (options.event.pageY - 10);
+        
         if(options.left)
             left = options.left;
 
         var rect = ref_window.document.body.getClientRects()[0];
-
+       console.log(root_rect.width,root_rect.height)
         if(options.from)
         {
             var parent_rect = options.from.getClientRects()[0];
             left = parent_rect.left + parent_rect.width;
         }
 
-
+        
         if(left > (rect.width - root_rect.width - 10))
             left = (rect.width - root_rect.width - 10);
         if(top > (rect.height - root_rect.height - 10))
             top = (rect.height - root_rect.height - 10);
+            console.log(left,top)
+            
     }
 
     root.style.left = left + "px";
@@ -3512,6 +3519,7 @@ LGraphCanvas.prototype.processMouseDown = function (e) {
     if (!this.graph) return;
     this.adjustMouseEvent(e);
     this.canvas.focus();
+     
 
     var ref_window = this.getCanvasWindow();
     var document = ref_window.document;
@@ -3521,6 +3529,7 @@ LGraphCanvas.prototype.processMouseDown = function (e) {
     ref_window.document.addEventListener("mouseup", this._mouseup_callback, true);
 
     var n = this.graph.getNodeOnPos(e.canvasX, e.canvasY, this.visible_nodes);
+     
     var skip_dragging = false;
 
     if (e.which == 1) //left button mouse
@@ -3638,6 +3647,8 @@ LGraphCanvas.prototype.processMouseDown = function (e) {
     }
     else if (e.which == 3) //right button
     {
+         
+    
         this.processContextualMenu(n, e);
     }
 
@@ -3650,10 +3661,10 @@ LGraphCanvas.prototype.processMouseDown = function (e) {
     this.last_mouseclick = LiteGraph.getTime();
     this.canvas_mouse = [e.canvasX, e.canvasY];
 
-    /*
-     if( (this.dirty_canvas || this.dirty_bgcanvas) && this.rendering_timer_id == null)
-     this.draw();
-     */
+    
+    //  if( (this.dirty_canvas || this.dirty_bgcanvas) && this.rendering_timer_id == null)
+    //  this.draw();
+     
 
     this.graph.change();
 
@@ -4247,6 +4258,7 @@ LGraphCanvas.prototype.drawFrontCanvas = function () {
             ctx.fillText("I: " + this.graph.iteration, 5, 13 * 2);
             ctx.fillText("F: " + this.frame, 5, 13 * 3);
             ctx.fillText("FPS:" + this.fps.toFixed(2), 5, 13 * 4);
+        
         }
         else
             ctx.fillText("No graph selected", 5, 13 * 1);
@@ -4273,7 +4285,7 @@ LGraphCanvas.prototype.drawFrontCanvas = function () {
             //Draw
             this.drawNode(node, ctx);
             drawn_nodes += 1;
-
+            
             //Restore
             ctx.restore();
         }
@@ -4993,7 +5005,9 @@ LGraphCanvas.prototype.touchHandler = function (event) {
 }
 
 /* CONTEXT MENU ********************/
+LGraphCanvas.onMenuAddGrp = function (node, e, prev_menu, canvas, first_event) {
 
+}
 LGraphCanvas.onMenuAdd = function (node, e, prev_menu, canvas, first_event) {
     var window = canvas.getCanvasWindow();
 
@@ -5213,10 +5227,17 @@ LGraphCanvas.prototype.getCanvasMenuOptions = function () {
     if (this.getMenuOptions)
         options = this.getMenuOptions();
     else {
+        console.log(Object.keys(this.selected_nodes).length)
+        if(Object.keys(this.selected_nodes).length>1){
+            console.log(this.selected_nodes)
         options = [
-            {content: "Add Node", is_menu: true, callback: LGraphCanvas.onMenuAdd }
-            //{content:"Collapse All", callback: LGraphCanvas.onMenuCollapseAll }
-        ];
+            {content: "Add Node", is_menu: true, callback: LGraphCanvas.onMenuAdd },
+           // {content:"Collapse All", callback: LGraphCanvas.onMenuCollapseAll }
+           {content:"Add Node Group", callback: LGraphCanvas.onMenuAddGrp }
+        ];}
+        else{
+        options = [
+            {content: "Add Node", is_menu: true, callback: LGraphCanvas.onMenuAdd }]}
 
         if (this._graph_stack && this._graph_stack.length > 0)
             options = [
@@ -5592,22 +5613,21 @@ function sortMapByValue(map)
 }
 
 // codes it's [vertex, fragment]
-ShaderConstructor.createShader = function (properties , albedo,normal,emission,specular,gloss,alpha,alphaclip, refraction, offset,time,ro,ta) {
-
-    albedo.merge(normal);
-    albedo.merge(emission);
-    albedo.merge(specular);
-    albedo.merge(gloss);
-    albedo.merge(alpha);
-    albedo.merge(alphaclip);
-    albedo.merge(refraction);
-    albedo.merge(offset);
-    albedo.merge(time);
-    albedo.merge(ro);
-    albedo.merge(ta);
-
+ShaderConstructor.createShader = function (properties , albedo,normal,emission,specular,gloss,alpha,alphaclip, refraction, offset,sdfProc,sdfMaterialProc) {
+    
+    // albedo.merge(normal);
+    // albedo.merge(emission);
+    // albedo.merge(specular);
+    // albedo.merge(gloss);
+    // albedo.merge(alpha);
+    // albedo.merge(alphaclip);
+    // albedo.merge(refraction);
+    // albedo.merge(offset);
+    //albedo.merge(sdfProc);
+    //albedo.merge(sdfMaterialProc);
+    
     var vertex_code = this.createVertexCode(properties ,albedo,normal,emission,specular,gloss,alpha,alphaclip, refraction, offset);
-    var fragment_code = this.createFragmentCode(properties ,albedo,normal,emission,specular,gloss,alpha,alphaclip, refraction, offset,time,ro,ta);
+    var fragment_code = this.createFragmentCode(properties ,albedo,normal,emission,specular,gloss,alpha,alphaclip, refraction, offset,sdfProc,sdfMaterialProc);
 
     var shader = {};
     shader.vertex_code = vertex_code;
@@ -5629,7 +5649,7 @@ ShaderConstructor.createVertexCode = function (properties ,albedo,normal,emissio
         r += "varying vec3 v_normal;\n";
 
     r += "varying vec3 v_pos;\n";
-    if (albedo.vertex.isLineIncluded("u_time"))
+    //if (albedo.vertex.isLineIncluded("u_time"))
         r += "uniform float u_time;\n";
     if (albedo.vertex.isLineIncluded("u_frame_time"))
         r += "uniform float u_frame_time;\n";
@@ -5685,19 +5705,19 @@ ShaderConstructor.createVertexCode = function (properties ,albedo,normal,emissio
     return r;
 }
 
-ShaderConstructor.createFragmentCode = function (properties, albedo,normal,emission,specular,gloss,alpha,alphaclip, refraction, offset,time,ro,ta) {
+ShaderConstructor.createFragmentCode = function (properties, albedo,normal,emission,specular,gloss,alpha,alphaclip, refraction, offset,sdfProc,sdfMaterialProc) {
 
-
+    console.log("sdfProc code:",sdfProc.fragment)
     var has_gloss = gloss.fragment.isCodeUsed();
     var has_albedo = albedo.fragment.isCodeUsed();
     var has_normal = normal.fragment.isCodeUsed();
     var has_specular = specular.fragment.isCodeUsed();
     var has_emission = emission.fragment.isCodeUsed();
-    var has_gloss = gloss.fragment.isCodeUsed();
+ 
     var has_alpha = alpha.fragment.isCodeUsed();
     var has_alphaclip = alphaclip.fragment.isCodeUsed();
     var has_refraction = refraction.fragment.isCodeUsed();
-    
+    var has_sdfProc = sdfProc.fragment.isCodeUsed();
 //    var includes = albedo.fragment.includes;
 //    for (var line in albedo.fragment.includes) { includes[line] = 1; }
 //    for (var line in normal.fragment.includes) { includes[line] = 1; }
@@ -5709,8 +5729,7 @@ ShaderConstructor.createFragmentCode = function (properties, albedo,normal,emiss
     if(albedo.fragment !== LiteGraph.EMPTY_CODE.fragment)
         albedo.fragment.addHeaderLine("uniform samplerCube u_cube_default_texture;\n");
 
-
-
+    
     // header
     var r = "#extension GL_OES_standard_derivatives : enable\n"+
      "precision mediump float;\n";
@@ -5720,19 +5739,19 @@ ShaderConstructor.createFragmentCode = function (properties, albedo,normal,emiss
         r += "varying vec3 v_normal;\n";
     //if (includes["v_pos"])
         r += "varying vec3 v_pos;\n";
-    if (albedo.fragment.isLineIncluded("u_time"))
+    //if (albedo.fragment.isLineIncluded("u_time"))
         r += "uniform float u_time;\n";
     if (albedo.fragment.isLineIncluded("u_frame_time"))
         r += "uniform float u_frame_time;\n";
     //if (includes["u_eye"])
         r += "uniform vec3 u_eye;\n";
-    r += "uniform vec4 u_color;\n";
-    r += "uniform vec3 u_light_dir;\n";
-    r += "uniform vec4 u_light_color;\n";
-    r += "uniform float u_alpha_threshold;\n";
-    r += "uniform vec3 u_camera_target;\n"; 
-    r += "uniform vec3 u_camera_pos;\n"; 
-    r += "uniform vec2 iResolution;\n";
+        r += "uniform vec4 u_color;\n";
+        r += "uniform vec3 u_light_dir;\n";
+        r += "uniform vec4 u_light_color;\n";
+        r += "uniform float u_alpha_threshold;\n";
+        r += "uniform vec3 u_camera_target;\n"; 
+        r += "uniform vec3 u_camera_pos;\n"; 
+        r += "uniform vec2 iResolution;\n";
 
     var h = albedo.fragment.getHeader();
     for(var id in h)
@@ -5755,31 +5774,25 @@ ShaderConstructor.createFragmentCode = function (properties, albedo,normal,emiss
     }
     
     r+=`
-    #define AA 1
-     
-    mat3 setCamera( in vec3 ro, in vec3 ta, float cr )
+#define AA 1
+mat3 setCamera( in vec3 ro, in vec3 ta, float cr )
 {     
     
-	//vec3 cw = normalize(ta-ro);
-	//vec3 cp = vec3(sin(cr), cos(cr),0.0);
-	//vec3 cu = normalize( cross(cw,cp) );
-    //vec3 cv =          ( cross(cu,cw) );
-    //return mat3( cu, cv, cw );
+//vec3 cw = normalize(ta-ro);
+//vec3 cp = vec3(sin(cr), cos(cr),0.0);
+//vec3 cu = normalize( cross(cw,cp) );
+//vec3 cv =          ( cross(cu,cw) );
+//return mat3( cu, cv, cw );
+float fl = 2.45;
+vec3 w = normalize(ta-ro);
+float k = inversesqrt(1.0-w.y*w.y);
+return  mat3( vec3(-w.z,0.0,w.x)*k, 
+                vec3(-w.x*w.y,1.0-w.y*w.y,-w.y*w.z)*k,
+                -w);
 
-    
-	float fl = 2.45;
-    
-
-
-    vec3 w = normalize(ta-ro);
-	float k = inversesqrt(1.0-w.y*w.y);
-    return  mat3( vec3(-w.z,0.0,w.x)*k, 
-                 vec3(-w.x*w.y,1.0-w.y*w.y,-w.y*w.z)*k,
-                 -w);
-    
 }
-
-// http://iquilezles.org/www/articles/smin/smin.htm
+vec4 opU(vec4 d1,vec4 d2){return (d1.x < d2.x)?d1:d2;}
+ 
 float smin( float a, float b, float k )
 {
     float h = max(k-abs(a-b),0.0);
@@ -5787,7 +5800,7 @@ float smin( float a, float b, float k )
 }
 
 // http://iquilezles.org/www/articles/smin/smin.htm
-vec2 smin( vec2 a, vec2 b, float k )
+vec2 smin2( vec2 a, vec2 b, float k )
 {
     float h = clamp( 0.5+0.5*(b.x-a.x)/k, 0.0, 1.0 );
     return mix( b, a, h ) - k*h*(1.0-h);
@@ -5818,16 +5831,14 @@ vec2 sdStick(vec3 p, vec3 a, vec3 b, float r1, float r2) // approximated
 	float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
 	return vec2( length( pa - ba*h ) - mix(r1,r2,h*h*(3.0-2.0*h)), h );
 }
-vec4 opU( vec4 d1, vec4 d2 )
-{
-	return (d1.x<d2.x) ? d1 : d2;
-}
+
 
 
 float href;
 float hsha;
 vec4 map( in vec3 pos, float atime )
 {
+ 
     hsha = 1.0;
     float t1 = fract(atime);
     float t4 = abs(fract(atime*0.5)-0.5)/0.5;
@@ -5860,14 +5871,26 @@ vec4 map( in vec3 pos, float atime )
     vec3 r = q;
     href = q.y;
     //q.yz = vec2( dot(uu,q.yz), dot(vv,q.yz) );
-                     
+    `
+
+    var rr = ""
+    varsdfbodyhash = sdfProc.fragment.getBody()
+    var varsdfbodyhashmap = sortMapByValue(varsdfbodyhash);
+    for(var i in varsdfbodyhashmap){
+        rr += "      "+varsdfbodyhashmap[i][1].str;
+    }
+    console.log(rr)
+    r+=rr;
+    r+="vec4 res =" + sdfProc.getOutputVar() +";\n";
+    r+=`
+    /*
     vec4 res = vec4( sdEllipsoid( q, vec3(0.25, 
         0.25,
         //0.25*sy,
         0.25 
         //0.25*sz
         ) ), 2.0, 0.0, 1.0 );
-
+        */
     // head
     vec3 h = r;
     float hr = sin(0.791*atime);
@@ -5877,13 +5900,14 @@ vec4 map( in vec3 pos, float atime )
     float d  = sdEllipsoid( h-vec3(0.0,0.20,0.02), vec3(0.08,0.2,0.15) );
     float d2 = sdEllipsoid( h-vec3(0.0,0.21,-0.1), vec3(0.20,0.2,0.20) );
     d = smin( d, d2, 0.1 );
-    res.x = smin( res.x, d, 0.1 );
+    //res.x = smin( res.x, d, 0.1 );
+    /*
     // ears
     {
     float t3 = fract(atime+0.9);
     float p3 = 4.0*t3*(1.0-t3);
     vec2 ear = sdStick( hq, vec3(0.15,0.32,-0.05), vec3(0.2+0.05*p3,0.2+0.2*p3,-0.07), 0.01, 0.04 );
-    res.xz = smin( res.xz, ear, 0.01 );
+    res.xz = smin2( res.xz, ear, 0.01 );
     }
     
     // mouth
@@ -5892,6 +5916,7 @@ vec4 map( in vec3 pos, float atime )
     res.w = 0.3+0.7*clamp( d*150.0,0.0,1.0);
     res.x = smax( res.x, -d, 0.03 );
     }
+    
     // eye
     {
     float blink = pow(0.5+0.5*sin(2.1*atime),20.0);
@@ -5907,7 +5932,7 @@ vec4 map( in vec3 pos, float atime )
     res = opU( res, vec4(sdSphere(hq-vec3(0.08,0.28,0.08),0.060),3.0,0.0,eo));
     res = opU( res, vec4(sdSphere(hq-vec3(0.075,0.28,0.102),0.0395),4.0,0.0,1.0));
     }
-
+    */
     // ground
     float fh = -0.1 - 0.05*(sin(pos.x*2.0)+sin(pos.z*2.0));
     float t5f = fract(atime+0.05);
@@ -6035,12 +6060,6 @@ float calcOcclusion( in vec3 pos, in vec3 nor, float time )
     return clamp( 1.0 - 2.0*occ, 0.0, 1.0 );
 }
 
-
-
-
-
-
-
 vec3 render( in vec3 ro, in vec3 rd, float time )
 { 
     // sky dome
@@ -6155,12 +6174,15 @@ vec3 render( in vec3 ro, in vec3 rd, float time )
     }
 
     */
-
+    //包括
+    var rr = "albedo:\n"
     var body_hash = albedo.fragment.getBody();
     var sorted_map = sortMapByValue(body_hash);
     for(var i in sorted_map){
-        r += "      "+sorted_map[i][1].str;
+        rr += "      "+sorted_map[i][1].str;
     }
+    console.log(rr)
+     
     /*
     if(has_alphaclip) {
         r += "       if ("+alphaclip.getOutputVar()+" < u_alpha_threshold)\n" +
@@ -6267,11 +6289,10 @@ vec3 render( in vec3 ro, in vec3 rd, float time )
     //vec3 ro = vec3(-0.045+0.05,-0.04,1.3);
     //vec3 ta = vec3(-0.19,-0.08,0.0);
     `;
-    r+="vec3 ro =" +  ro.getOutputVar() + ";\n";
-    r+="vec3 ta =" +  ta.getOutputVar() + ";\n";
+    
     r+=`
-    ro = u_camera_pos;
-    ta = u_camera_target;
+    vec3 ro = u_camera_pos;
+    vec3 ta = u_camera_target;
     mat3 ca = setCamera( ta,ro, 0.0 );
 
     // ray direction

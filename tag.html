@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        input{background-color: white}
+        .click{background-color: darkcyan}
+        div{width: 200px;height: 200px;background-color: antiquewhite;display: none}
+    </style>
+    <script type="text/javascript">
+        window.onload=function ()
+        {
+         var ainput = document.getElementsByTagName('input');//获取所有input标签
+         var adiv = document.getElementsByTagName('div');//获取所有div标签
+         var i = 0
+         for (i=0;i<ainput.length;i++)
+         {
+             ainput[i].index = i
+             ainput[i].onclick=function ()//循环点击input标签
+             {
+                for(i=0;i<ainput.length;i++)//循环清除input标签和div标签样式某些属性
+                {
+                    ainput[i].className='';
+                    adiv[i].style.display='none';
+                }
+                // alert('点击'+this.index+'个按钮');
+                 adiv[this.index].style.display='block';//当前input所对应的显示div
+                 this.className='click';
+             }
+         }
+        }
+    </script>
+</head>
+<body>
+   <input type="button" value="1">
+   <input type="button" value="2">
+  
+    <div>000</div>
+    <div>111</div>
+</body>
+</html>

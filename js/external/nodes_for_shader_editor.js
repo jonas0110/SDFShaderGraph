@@ -975,9 +975,8 @@ function LGraphShader()
     this.addInput("alpha clip","float", {float:1});
     this.addInput("refraction","float", {float:1});
     this.addInput("vertex offset","float", {float:1});
-    this.addInput("time","float", {float:1});
-    this.addInput("cam_ro","vec3", {vec3:1});
-    this.addInput("cam_ta","vec3", {vec3:1});
+    this.addInput("sdfProc","vec4", {vec4:1});
+    this.addInput("sdfMaterialProc","vec3", {vec3:1});
     //inputs: ["base color","metallic", "specular", "roughness", "emissive color", "opacity", "opacitiy mask", "normal", "world position offset", "world displacement", "tesselation multiplier", "subsurface color", "ambient occlusion", "refraction"],
 //    this.properties = { color:"#ffffff",
 //                        gloss:4.0,
@@ -1036,6 +1035,7 @@ LGraphShader.prototype.sortPathByOrder = function (map)
 LGraphShader.prototype.getFullCode = function(slot, scope, modifier) {
     CodePiece.ORDER_MODIFIER = modifier;
     var path = this.getInputNodePath(slot);
+    
     var sorted_map = this.sortPathByOrder(path);
     for(var i = 0; i < sorted_map.length; ++i){
         var node = sorted_map[i][1];
@@ -1043,6 +1043,7 @@ LGraphShader.prototype.getFullCode = function(slot, scope, modifier) {
             node.processInputCode(scope);
     }
     var code = this.getInputCode(slot) || LiteGraph.EMPTY_CODE; // 0 it's the color
+   
     return code;
 }
 
@@ -1058,11 +1059,12 @@ LGraphShader.prototype.processInputCode = function() {
     var alphaclip_code = this.getFullCode(6, CodePiece.FRAGMENT,0);
     var refraction_code = this.getFullCode(7, CodePiece.FRAGMENT,0);
     var world_offset_code = this.getFullCode(8, CodePiece.VERTEX,0);
-    var time_code = this.getFullCode(9, CodePiece.FRAGMENT,0);
-    var ro_code = this.getFullCode(10, CodePiece.FRAGMENT,0);
-    var ta_code = this.getFullCode(11, CodePiece.FRAGMENT,0);
-    console.log(ro_code);
-    var shader = this.shader_piece.createShader(this.graph.scene_properties ,color_code,normal_code,emission_code,specular_code,gloss_code,alpha_code,alphaclip_code,refraction_code, world_offset_code,time_code,ro_code,ta_code);
+     
+    var sdfProc = this.getFullCode(9, CodePiece.FRAGMENT,0);
+    
+    var sdfMaterialProc = this.getFullCode(10, CodePiece.FRAGMENT,0);
+     
+    var shader = this.shader_piece.createShader(this.graph.scene_properties ,color_code,normal_code,emission_code,specular_code,gloss_code,alpha_code,alphaclip_code,refraction_code, world_offset_code,sdfProc,sdfMaterialProc);
 
     var texture_nodes = this.graph.findNodesByType("texture/"+LGraphTexture.title);// we need to find all the textures used in the graph
     var shader_textures = [];
@@ -1834,7 +1836,7 @@ LGraphVecToComps.prototype.processInputCode = function(scope)
         z_chan.output_var = input_code.getOutputVar()+".z";
         this.codes[2] = z_chan;
         var v_chan = input_code.clone();
-        v_chan.output_var = input_code.getOutputVar()+".v";
+        v_chan.output_var = input_code.getOutputVar()+".w";
         this.codes[3] = v_chan;
     }
 }
@@ -2748,9 +2750,9 @@ LiteGraph.registerNodeType("math/"+LGraphReflect.title, LGraphReflect);
 
 
 
-function LGraphSmooth()
+function LGraphSmoothStep()
 {
-    this._ctor(LGraphSmooth.title);
+    this._ctor(LGraphSmoothStep.title);
 
     this.code_name = "smoothstep";
     this.output_types = null;
@@ -2770,13 +2772,13 @@ function LGraphSmooth()
     LGraph3ParamNode.call( this);
 }
 
-LGraphSmooth.prototype = Object.create(LGraph3ParamNode); // we inherit from Entity
-LGraphSmooth.prototype.constructor = LGraphSmooth;
+LGraphSmoothStep.prototype = Object.create(LGraph3ParamNode); // we inherit from Entity
+LGraphSmoothStep.prototype.constructor = LGraphSmoothStep;
 
-LGraphSmooth.title = "SmoothStep";
-LGraphSmooth.desc = "smoothstep of input";
+LGraphSmoothStep.title = "SmoothStep";
+LGraphSmoothStep.desc = "smoothstep of input";
 
-LGraphSmooth.prototype.infereTypes = function( output_slot, target_slot, node) {
+LGraphSmoothStep.prototype.infereTypes = function( output_slot, target_slot, node) {
     var out_types = node.getTypesFromOutputSlot(output_slot);
     if( (target_slot == 0 || target_slot == 1) && Object.keys(out_types)[0] == "float")
         return;
@@ -2802,7 +2804,7 @@ LGraphMix.prototype.disconnectTemplateSlot = function(input_slot){
     this.resetTypes(input_slot);
 }
 
-LGraphSmooth.prototype.onGetNullCode = function(slot, scope)
+LGraphSmoothStep.prototype.onGetNullCode = function(slot, scope)
 {
     if(slot == 0){
         var code = this.number_piece.getCode({
@@ -2827,7 +2829,7 @@ LGraphSmooth.prototype.onGetNullCode = function(slot, scope)
 
 }
 
-LGraphSmooth.prototype.onDrawBackground = function(ctx)
+LGraphSmoothStep.prototype.onDrawBackground = function(ctx)
 {
     //show the current value
     this.inputs[0].label = "lower";
@@ -2838,8 +2840,8 @@ LGraphSmooth.prototype.onDrawBackground = function(ctx)
         this.inputs[1].label += "="+this.properties["upper"].toFixed(3);
 }
 
-LiteGraph.extendClass(LGraphSmooth,LGraph3ParamNode);
-LiteGraph.registerNodeType("math/"+LGraphSmooth.title, LGraphSmooth);
+LiteGraph.extendClass(LGraphSmoothStep,LGraph3ParamNode);
+LiteGraph.registerNodeType("math/"+LGraphSmoothStep.title, LGraphSmoothStep);
 
 
 

@@ -246,7 +246,7 @@ vik.ui = (function () {
         addTopBarButton("live_update","fa fa-refresh fa-spin","Live Update", {div_class:"pressed"});
         addTopBarButton("apply","fa fa-check-circle","Apply");
         addTopBarButton("clean_graph","fa fa-trash-o","Clean Up");
-        //addTopBarButton("change_canvas","fa fa-cubes","Canvas", {div_class:"pressed"});
+        addTopBarButton("change_canvas","fa fa-cubes","Canvas", {div_class:"pressed"});
         addTopBarButton("change_layout","fa fa-desktop","Full Screen");
         addTopBarButton("about","fa fa-info","About");
         addTopBarButton("contact","fa fa-linkedin-square","Contact", {div_class:"contact", anchor_href:"mailto:284724960@qq.com"});
@@ -308,11 +308,14 @@ vik.ui = (function () {
                         active: 'Graph',
                         tabs: [
                             { id: 'Graph', caption: 'Graph', closable: false },
+                            { id: 'SubGraph', caption: 'SubGraph', closable: false },
                             { id: 'Code', caption: 'Code', closable: false }
+                            
                         ],
                         onClick: function (event) {
                             $('#layout_main_layout_panel_main .w2ui-panel-content').children().hide();
                             var content = $('#layout_main_layout_panel_main #'+event.target);
+                              
                             content.show();
                             module.onResize();
                         }
@@ -333,7 +336,7 @@ vik.ui = (function () {
             panel_holder:'right',
             panels: [
 
-                { type: 'right', size: '30', resizable: true, hidden:true },
+                 
 
                 { type: 'main', size: '50%', resizable: true,
                     tabs: {

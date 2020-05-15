@@ -1,3 +1,4 @@
+ 
 /**
  * Created by vik on 15/01/2015.
  */
@@ -8,6 +9,7 @@ vik.app = vik.app || {};
 vik.ui = vik.ui || {};
 
 vik.app = (function () {
+    
     var module = {};
     var gcanvas = null;
     var graph = null;
@@ -32,13 +34,11 @@ vik.app = (function () {
     module.scene_properties = scene_default_properties;
 
     var canvas2webgl = window.location.href.indexOf('?3d') > -1;
+    console.log(canvas2webgl)
     //var url_graph = window.location.href.indexOf('?3d') > -1;
 
     module.CUBEMAPS_PATH = "assets/textures/cubemap/";
     module.TEXTURES_PATH = "assets/textures/texture/";
-
-
-
 
     LiteGraph.current_ctx = LiteGraph.CANVAS_2D;
 
@@ -167,8 +167,9 @@ vik.app = (function () {
             vik.ui.removeNode(node);
         }
 
-
+        subgraph.init();
         module.changeCanvas();
+        subgraph.changeCanvas();
         module.loadTextures();
 
 
@@ -229,6 +230,7 @@ vik.app = (function () {
                 main_node.setTexture("cube_default", "cube_default");
                 main_node.shader = "current";
                 module.createCodeHighlighted(shader);
+            
             }
             else
             {
@@ -254,13 +256,17 @@ vik.app = (function () {
         var code_div = $("#code");//document.getElementById("code");
         code_div.height(code_div.parent().parent().height() - 30);
         if (graph.shader_output) {
+             
             code_div[0].innerHTML = '<div class="dg"><ul>' +
                 '<li class="code-title">Vertex Code</li>' +
+                /*
                 '<pre><code class="glsl" id="vertex_code">' + shader.vertex_code + ' </pre></code>' +
                 '<li class="code-title">Fragment Code</li>' +
+                */
                 '<pre><code class="glsl" id="fragment_code">' + shader.fragment_code + '</pre></code>' +
                 '</ul></div>';
-            hljs.highlightBlock(document.getElementById("vertex_code"));
+             
+            //hljs.highlightBlock(document.getElementById("vertex_code"));
             hljs.highlightBlock(document.getElementById("fragment_code"));
         }
     }
@@ -291,7 +297,7 @@ vik.app = (function () {
 
     module.changeCanvas = function () {
         var container = $("#layout_main_layout_panel_main div.w2ui-panel-content");
-        $("#layout_main_layout_panel_main div.w2ui-panel-content canvas").remove();
+        //$("#layout_main_layout_panel_main div.w2ui-panel-content canvas").remove();
 
         var h = container.height();
         var w = container.width();
@@ -407,6 +413,7 @@ vik.app = (function () {
             json.scene_properties = graph.scene_properties;
             var data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(json));
             this.href = data;
+             
             return true;
         });
 
