@@ -1,5 +1,14 @@
+const TerserPlugin = require('terser-webpack-plugin');
+ 
 const path = require("path");
-module.exports = {    mode: "development", //打包为开发模式   
+module.exports = {    
+  optimization: {
+    minimize: true,
+    minimizer: [new TerserPlugin(),
+       
+    ],
+  },
+  mode: "production", //打包为开发模式   
  // 入口配置的对象中，属性为输出的js文件名，属性值为入口文件  
    entry: [    	
         "./js/external/nodeSubGraph", 
