@@ -77,7 +77,7 @@ vik.app = (function () {
         var request = new XMLHttpRequest();
         request.open('GET', module.TEXTURES_PATH +"list.txt");
         request.onreadystatechange = function () {
-            if (request.readyState == 4 && request.status == 200) {
+            if (request.readyState == 4){// && request.status == 200) {
                 var txt = request.responseText.split(/\r?\n/);
                 for (var i in txt) {
                     var filename = LiteGraph.removeExtension(txt[i]);
@@ -362,7 +362,7 @@ vik.app = (function () {
     }
 
     function loadListeners() {
-
+        console.log("load clicked")
         window.addEventListener("contentChange", function (force_compile, draw) {
             module.compile(force_compile, draw);
         });
@@ -462,9 +462,9 @@ vik.app = (function () {
 
         var code_loader = document.getElementById("load_graph");
         code_loader.addEventListener("click", function () {
-
+            
             function onComplete(list) {
-
+                
                 w2popup.open({
                     title: 'Load Graph',
                     body: '<div class="w2ui-inner-popup">' + list + '</div>'
@@ -485,8 +485,10 @@ vik.app = (function () {
             var request = new XMLHttpRequest();
             request.open('GET', "graphs/list.txt");
             request.onreadystatechange = function () {
-                if (request.readyState == 4 && request.status == 200) {
+              
+                if (request.readyState == 4 ){//&& request.status == 200) {
                     var txt = request.responseText.split(/\r?\n/);
+                    
                     var html = '<div class="dg"><ul id="popup-list">';
                     for (var i in txt) {
                         html += '<li class="cr function" id="' + txt[i] + '"> <span class="property-name">' + txt[i] + '</span></li>';

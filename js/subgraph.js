@@ -40,7 +40,7 @@ changeCanvas:function(){
         gl.clear(gl.COLOR_BUFFER_BIT);
          
     }
-    console.log(this.gcanvas)
+    //console.log(this.gcanvas)
     this.gcanvas.onNodeSelected = function (node) {
         vik.ui.updateLeftPanel(node);
     }

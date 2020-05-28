@@ -3158,8 +3158,9 @@ Mesh.fromURL = function(url, on_complete, gl)
     gl = gl || global.gl;
     var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
     mesh.ready = false;
-
+    console.log("load mesh:",url)
     HttpRequest( url, null, function(data) {
+        
         var ext = url.substr(url.length - 4).toLowerCase();
         var parser = Mesh.parsers[ ext ];
         if(parser)

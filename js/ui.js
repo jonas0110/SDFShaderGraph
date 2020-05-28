@@ -336,8 +336,6 @@ vik.ui = (function () {
             panel_holder:'right',
             panels: [
 
-                 
-
                 { type: 'main', size: '50%', resizable: true,
                     tabs: {
                         active: 'Palette',
