@@ -1,11 +1,13 @@
 const TerserPlugin = require('terser-webpack-plugin');
- 
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const path = require("path");
 module.exports = {    
   optimization: {
     minimize: true,
     minimizer: [new TerserPlugin(),
-       
+      new UglifyJsPlugin({
+        extractComments: true,
+      }),
     ],
   },
   mode: "production", //打包为开发模式   
