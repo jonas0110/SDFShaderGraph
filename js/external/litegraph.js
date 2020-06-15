@@ -31,7 +31,7 @@ var LiteGraph = {
     NODE_DEFAULT_BOXCOLOR: "#AEF",
     NODE_SELECTED_COLOR: "#FFF",
     NODE_DEFAULT_SHAPE: "box", // round circle box
-    MAX_NUMBER_OF_NODES: 1000, //avoid infinite loops
+    MAX_NUMBER_OF_NODES: 5000, //avoid infinite loops
     DEFAULT_POSITION: [100, 100],//default node position
     node_images_path: "",
 
@@ -39,7 +39,7 @@ var LiteGraph = {
 
     debug: false,
     throw_errors: true,
-    showcode: true,
+    showcode: false,
     registered_node_types: {},
 
     graph_max_steps: 0,
@@ -61,6 +61,7 @@ var LiteGraph = {
          */
 
     registerNodeType: function (type, base_class) {
+
         if (!base_class.prototype)
             throw ("Cannot register a simple object, it must be a class with a prototype");
         base_class.type = type;
@@ -82,6 +83,7 @@ var LiteGraph = {
                     base_class.prototype[i] = LGraphNode.prototype[i];
 
         this.registered_node_types[type] = base_class;
+        //console.log(this.registered_node_types[type])
     },
 
     /**
@@ -91,9 +93,9 @@ var LiteGraph = {
      * @param {String} name a name to distinguish from other nodes
      * @param {Object} options to set options
      */
-    createSubGraph: function (selected_nodes,graph) {
-        
-        var subGraph = new nodeSubGraph(selected_nodes,graph)
+    createSubGraph: function (selected_nodes, graph) {
+
+        var subGraph = new nodeSubGraph(selected_nodes, graph)
         console.log("subGraph:", subGraph)
         return subGraph;
 
@@ -1080,6 +1082,8 @@ LGraph.prototype.computeExecutionOrder = function () {
     var remaining_links = {}; //to a
 
     //search for the nodes without inputs (starting nodes)
+
+  
     for (var i in this._nodes) {
         var n = this._nodes[i];
         M[n.id] = n; //add to pending nodes
@@ -1095,6 +1099,8 @@ LGraph.prototype.computeExecutionOrder = function () {
         else //num of input links
             remaining_links[n.id] = num;
     }
+    
+    //整理s顺序
     var counter = 0;
     while (true) {
         counter++;
@@ -1105,7 +1111,7 @@ LGraph.prototype.computeExecutionOrder = function () {
         var n = S.shift();
         L.push(n); //add to ordered list
         delete M[n.id]; //remove from the pending nodes
-
+        //用 nodes output 顺一遍，剔除input生成的remaining_links以净化下一个node,然后加入start nodes 也就是 s列表 20200612
         //for every output
         if (n.outputs)
             for (var i = 0; i < n.outputs.length; i++) {
@@ -1211,6 +1217,9 @@ LGraph.prototype.sendActionToCanvas = function (action, params) {
     }
 }
 
+
+
+
 /**
  * Adds a new node instasnce to this graph
  * @method add
@@ -1225,9 +1234,11 @@ LGraph.prototype.add = function (node, skip_compute_order) {
         throw ("LiteGraph: max number of nodes in a graph reached");
 
     //give him an id
-    if (node.id == null || node.id == -1)
+    if (node.id == null || node.id == -1){
+        
         node.id = this.last_node_id++;
-
+        console.log("rearange node id in new subGraph:",node.id)
+    }
 
     node.graph = this;
 
@@ -1266,17 +1277,16 @@ LGraph.prototype.add = function (node, skip_compute_order) {
  * @method remove
  * @param {LGraphNode} node the instance of the node
  */
-LGraph.prototype.removeSubGraph = function(subGraph)
-{
+LGraph.prototype.removeSubGraph = function (subGraph) {
     var pos = this._subGraphs.indexOf(subGraph);
     if (pos != -1)
         this._subGraphs.splice(pos, 1);
     delete subGraph;
- 
+
     this.setDirtyCanvas(true, true);
 
     this.change();
- 
+
 }
 LGraph.prototype.remove = function (node) {
     if (this._nodes_by_id[node.id] == null)
@@ -1396,12 +1406,13 @@ LGraph.prototype.findNodesByTitle = function (title) {
 
 LGraph.prototype.getNodeOnPos = function (x, y, nodes_list) {
     nodes_list = nodes_list || this._nodes;
-    
+
     for (var i = nodes_list.length - 1; i >= 0; i--) {
         var n = nodes_list[i];
-        if (n.isPointInsideNode(x, y)){
-           
-            return n;}
+        if (n.isPointInsideNode(x, y)) {
+
+            return n;
+        }
 
     }
     return null;
@@ -1409,15 +1420,16 @@ LGraph.prototype.getNodeOnPos = function (x, y, nodes_list) {
 
 LGraph.prototype.getSubGraphOnPos = function (x, y, nodes_list) {
     nodes_list = nodes_list || this._nodes;
-    
+
     var margin_top = this.graph && this.graph.isLive() ? 0 : 20;
     for (var i = nodes_list.length - 1; i >= 0; i--) {
         var n = nodes_list[i];
-      
+
         if (n.rect.pos[0] - 4 < x && (n.rect.pos[0] + n.rect.size[0] + 4) > x
-        && (n.rect.pos[1] - margin_top) < y && (n.rect.pos[1] + n.rect.size[1]) > y){
-       
-            return n;}
+            && (n.rect.pos[1] - margin_top) < y && (n.rect.pos[1] + n.rect.size[1]) > y) {
+
+            return n;
+        }
 
     }
     return null;
@@ -1687,6 +1699,41 @@ LGraph.prototype.serialize = function () {
 }
 
 
+LGraph.prototype.serializeSubGraph = function () {
+    var nodes_info = [];
+    //selcted  
+    _subgraph = null
+    var canvas = this.list_of_graphcanvas[0]
+    console.log(canvas.selected_nodes)
+    for (var i in canvas.selected_nodes) {
+        var m = canvas.selected_nodes[i];
+        //if(m == this.node_in_panel) this.showNodePanel(null);
+
+        if (m.type == "subGraph") {
+            _subgraph = m
+            console.log("serializing subgraph:", m)
+            nodes_info.push(m.serialize());
+        }
+    }
+    if (_subgraph) {
+        console.log(_subgraph)
+        //remove data from links, we dont want to store it
+        for (var i in _subgraph.links)
+             _subgraph.links[i].data = null;
+
+       
+        var data = {
+            links: LiteGraph.cloneObject(_subgraph.links),
+            nodes: nodes_info
+        };
+        console.log("subgraph data for serialize:", data)
+        return data;
+    }
+    else
+        return null;
+}
+
+
 /**
  * Loads a graph from a url and calls configure
  * @method loadFromURL
@@ -1710,17 +1757,127 @@ LGraph.prototype.loadFromURL = function (url, on_pre_configure, on_complete, par
             on_complete(null);
     });
 }
+/**
+ * Configure a graph from a JSON string
+ * @method addGraph
+ * @param {String} str configure a graph from a JSON string
+ */
+LGraph.prototype.addGraph = function (data, keep_old,pos) {
+    console.log("add graph to pos:",pos)
+    var subGraphName = data.nodes[0].name;
+    var nodes = data.nodes[0].nodes;
+    var links = data.links;
+    var error = false;
+    var nodeidPairs = []
+    var linkidPairs = []
+    var tmpNodesForSubGraph = []
+    for (var i in nodes) {
+        var n_info = nodes[i]; //stored info
+        var node = LiteGraph.createNode(n_info.type, n_info.title);
+        console.log("add node from subgraph file:",n_info)
+        
+        if (!node) {
+            if (LiteGraph.debug)
+                console.log("Node not found: " + n_info.type);
+            error = true;
+            continue;
+        }
+        node.configure(n_info);
+        node.id = n_info.id; //id it or it will create a new id
+        node.id = -1
+        node.pos = n_info.pos
+        node = this.add(node, false); //add before configure, otherwise configure cannot create links
+        nodeidPairs.push({newid:node.id,
+        oldid:n_info.id
+        })
+        console.log("new node id:",node.id)
+        tmpNodesForSubGraph.push(node)
+        //links 应该是在这里配置
+        
+        
+    
+        
+        for(var link of links){
+        console.log("per link:",link)
+        for(var name of Object.keys(link))
+        for(var idPair of nodeidPairs)
+           {
+          if(link[name] == idPair.oldid)
+             link[name] = idPair.newid
+           }
+        
+             
+        this.last_link_id++
+        linkidPairs.push({oldid:link.id,newid:this.last_link_id})
+        link.id = this.last_link_id
+        this.links[this.last_link_id] = link
+        
+        }
+        console.log("node.inputs",node.inputs)
 
+
+        for(var input of Object.keys(node.inputs)){
+            var changed = false
+        for(var idPair of linkidPairs)
+            {
+                if(node.inputs[input].link == idPair.oldid){
+                   node.inputs[input].link = idPair.newid
+                console.log("changed",idPair)
+                changed = true
+                }
+            }
+            if(!changed)
+            node.inputs[input].link = null
+        }
+        console.log("node.inputs after",node.inputs)
+        console.log("node.outputs",node.outputs)
+
+        for(var outputID in node.outputs){
+            var newlinks = []
+
+        for(var linkID in node.outputs[outputID].links)
+            
+        for(var idPair of linkidPairs)
+            {
+                if(node.outputs[outputID].links[linkID] == idPair.oldid){
+                   // node.outputs[outputID].links[linkID] = idPair.newid
+                    console.log("changed",idPair)}
+                    newlinks.push(idPair.newid)
+            }
+        node.outputs[outputID].links = newlinks
+        }
+        
+        console.log("node.outputs after",node.outputs)
+        //把加入的node做成一个subgraph
+    }
+    var newSubGraph = new nodeSubGraph(tmpNodesForSubGraph, this)
+    newSubGraph.properties.name = subGraphName
+    console.log("add new subgraph:",newSubGraph)
+    for(var node of Object.values(newSubGraph.nodes)){
+        console.log("node:",node)
+     node.pos[0] += pos[0] - newSubGraph.rect.pos[0]
+     node.pos[1] += pos[1] - newSubGraph.rect.pos[1]
+    }
+    this._subGraphs.push(newSubGraph)
+        
+    
+    
+    this.updateExecutionOrder();
+    this.setDirtyCanvas(true, true);
+    this.change();
+    return error;
+}
 /**
  * Configure a graph from a JSON string
  * @method configure
  * @param {String} str configure a graph from a JSON string
  */
 LGraph.prototype.configure = function (data, keep_old) {
-    console.log("config:",data)
-    
-    if (!keep_old)
-        this.clear();
+    console.log("config:", data)
+     
+    if (!keep_old){
+        console.log("clear graph")
+        this.clear();}
 
     this.configuring = true;
     var nodes = data.nodes;
@@ -1737,7 +1894,7 @@ LGraph.prototype.configure = function (data, keep_old) {
     this._subGraphs = [];
     for (var i in nodes) {
         var n_info = nodes[i]; //stored info
-         
+
         if (n_info.type != "subGraph") {
             var node = LiteGraph.createNode(n_info.type, n_info.title);
             if (!node) {
@@ -1753,18 +1910,18 @@ LGraph.prototype.configure = function (data, keep_old) {
         }
         else {
             var getNodesByID = []
+          
             for (var node of nodes[i].nodes)
                 for (var destNode of this._nodes)
                     if (destNode.id == node.id)
                         getNodesByID.push(destNode)
-            var newSubGraph = new nodeSubGraph(getNodesByID,this)
-            newSubGraph.properties.name = n_info.name
-            console.log(newSubGraph.properties)
-            
 
+            var newSubGraph = new nodeSubGraph(getNodesByID, this)
+            newSubGraph.properties.name = n_info.name
             this._subGraphs.push(newSubGraph)
         }
     }
+    
     this.configuring = false;
     this.updateExecutionOrder();
     this.setDirtyCanvas(true, true);
@@ -1922,6 +2079,7 @@ LGraphNode.prototype.configure = function (info) {
 
     //FOR LEGACY, PLEASE REMOVE ON NEXT VERSION
     for (var i in this.inputs) {
+        console.log("load inputs:",this.inputs)
         var input = this.inputs[i];
         if (!input.link || !input.link.length)
             continue;
@@ -1931,7 +2089,10 @@ LGraphNode.prototype.configure = function (info) {
         input.link = link[0];
         this.graph.links[link[0]] = { id: link[0], origin_id: link[1], origin_slot: link[2], target_id: link[3], target_slot: link[4] };
     }
+
+    console.log("load outputs:",this.outputs)
     for (var i in this.outputs) {
+        
         var output = this.outputs[i];
         if (!output.links || output.links.length == 0)
             continue;
@@ -2338,19 +2499,19 @@ LGraphNode.prototype.getBounding = function () {
  * @return {boolean}
  */
 LGraphNode.prototype.isPointInsideNode = function (x, y) {
-     
+
     var margin_top = this.graph && this.graph.isLive() ? 0 : 20;
     if (this.flags.collapsed) {
         //if ( distance([x,y], [this.pos[0] + this.size[0]*0.5, this.pos[1] + this.size[1]*0.5]) < LiteGraph.NODE_COLLAPSED_RADIUS)
-        
+
         if (isInsideRectangle(x, y, this.pos[0], this.pos[1] - LiteGraph.NODE_TITLE_HEIGHT, this.getTitleWidth(), LiteGraph.NODE_TITLE_HEIGHT))
             return true;
     }
     else if (this.pos[0] - 4 < x && (this.pos[0] + this.size[0] + 4) > x
-        && (this.pos[1] - margin_top) < y && (this.pos[1] + this.size[1]) > y){
-     
+        && (this.pos[1] - margin_top) < y && (this.pos[1] + this.size[1]) > y) {
+
         return true;
-        }
+    }
     return false;
 }
 
@@ -3184,6 +3345,7 @@ LGraphCanvas.prototype.setCanvas = function (canvas) {
         var pos = [e.canvasX, e.canvasY];
         var node = that.graph.getNodeOnPos(pos[0], pos[1]);
 
+        console.log(pos)
         // if the dropEvenet has a node name like "math/sin" it will
         // create a node on that position
         var node_name = e.dataTransfer.getData('text');
@@ -3202,6 +3364,7 @@ LGraphCanvas.prototype.setCanvas = function (canvas) {
         //            return;
 
         var file = e.dataTransfer.files[0];
+        
         var filename = file.name;
         var ext = LGraphCanvas.getFileExtension(filename);
         //console.log(file);
@@ -3213,14 +3376,17 @@ LGraphCanvas.prototype.setCanvas = function (canvas) {
             var data = event.target.result;
             if (node && node.onDropFile)
                 node.onDropFile(data, filename, file, null, gl);
-            if (that.onDropFile)
-                that.onDropFile(data, filename, file);
+            if (that.onDropFile){
+                console.log("invoke:dropFile")
+                that.onDropFile(data, filename, file,pos);
+            }
             LiteGraph.dispatchEvent("contentChange", null, null);
 
 
         };
 
         //read data
+        console.log(file)
         var type = file.type.split("/")[0];
         if (type == "text" || ext == "json")
             reader.readAsText(file);
@@ -3397,9 +3563,9 @@ LGraphCanvas.prototype.processMouseDown = function (e) {
     ref_window.document.addEventListener("mouseup", this._mouseup_callback, true);
 
     var n = this.graph.getNodeOnPos(e.canvasX, e.canvasY, this.visible_nodes);
-    if (!n){
+    if (!n) {
         n = this.graph.getSubGraphOnPos(e.canvasX, e.canvasY, this.graph._subGraphs);
-        
+
     }
     var skip_dragging = false;
 
@@ -3420,9 +3586,19 @@ LGraphCanvas.prototype.processMouseDown = function (e) {
 
         //when clicked on top of a node
         //and it is not interactive
-        if (n) {
-            if (!this.live_mode && !n.flags.pinned)
+        if (n){
+        if (!this.live_mode && !n.flags.pinned){
+         
+        if(n.type != "subGraph") {
+            
                 this.bringToFront(n); //if it wasnt selected?
+                console.log("run bringtofront")
+            }
+        else{
+            this.bringToFrontForSubgraph(n); //if it wasnt selected?
+            console.log("run bringToFrontForSubgraph")
+
+        }}
             var skip_action = false;
 
             //not dragging mouse to connect two slots
@@ -3458,6 +3634,10 @@ LGraphCanvas.prototype.processMouseDown = function (e) {
                     }
 
                 //Search for corner
+                if(n.pos == null){
+                n.pos = n.rect.pos
+                n.size = n.rect.size
+                }
                 if (!skip_action && isInsideRectangle(e.canvasX, e.canvasY, n.pos[0] + n.size[0] - 5, n.pos[1] + n.size[1] - 5, 5, 5)) {
                     this.resizing_node = n;
                     this.canvas.style.cursor = "se-resize";
@@ -3495,11 +3675,11 @@ LGraphCanvas.prototype.processMouseDown = function (e) {
                 }
 
                 if (!block_drag_node) {
-                    if (this.allow_dragnodes){
-                     
+                    if (this.allow_dragnodes) {
+
                         this.node_dragged = n;
                     }
-                    
+
                     if (!this.selected_nodes[n.id])
                         this.processNodeSelected(n, e);
                 }
@@ -3639,18 +3819,17 @@ LGraphCanvas.prototype.processMouseMove = function (e) {
 
             for (var i in this.selected_nodes) {
                 var n = this.selected_nodes[i];
-                
+
                 n.pos[0] += delta[0] / this.scale;
                 n.pos[1] += delta[1] / this.scale;
-                if(n.nodes != null)
-                for(var ii of Object.values(n.nodes))
-                {
-                    
+                if (n.nodes != null)
+                    for (var ii of Object.values(n.nodes)) {
+
                         ii.pos[0] += delta[0] / this.scale;
                         ii.pos[1] += delta[1] / this.scale;
-                }    
-                
-            
+                    }
+
+
                 //n.pos[0] = Math.round(n.pos[0]);
                 //n.pos[1] = Math.round(n.pos[1]);
             }
@@ -3880,7 +4059,7 @@ LGraphCanvas.prototype.onNodeSelected = function (n) {
 
 LGraphCanvas.prototype.processNodeSelected = function (n, e) {
     if (LiteGraph.debug) {
-        console.log("node selected:",n);
+        console.log("node selected:", n);
     }
 
     n.selected = true;
@@ -3970,11 +4149,11 @@ LGraphCanvas.prototype.deleteSelectedNodes = function () {
     for (var i in this.selected_nodes) {
         var m = this.selected_nodes[i];
         //if(m == this.node_in_panel) this.showNodePanel(null);
-        console.log("delecting node:",m)
-        if(m.type =="subGraph")
-        this.graph.removeSubGraph(m)
+        console.log("delecting node:", m)
+        if (m.type == "subGraph")
+            this.graph.removeSubGraph(m)
         else
-        this.graph.remove(m);
+            this.graph.remove(m);
     }
     this.selected_nodes = {};
     this.setDirty(true);
@@ -4040,6 +4219,22 @@ LGraphCanvas.prototype.bringToFront = function (n) {
 
     this.graph._nodes.splice(i, 1);
     this.graph._nodes.push(n);
+}
+
+LGraphCanvas.prototype.bringToFrontForSubgraph = function (n) {
+    for(var nn of Object.keys(n.nodes)){
+    var i = this.graph._nodes.indexOf(n.nodes[nn]);
+   // if (i == -1) return;
+    console.log(i)
+    this.graph._nodes.splice(i, 1);
+    this.graph._nodes.push(n.nodes[nn]);
+    }
+    i = this.graph._subGraphs.indexOf(n);
+    console.log(i)
+   // if (i == -1) return;
+
+    this.graph._subGraphs.splice(i, 1);
+    this.graph._subGraphs.push(n);
 }
 
 LGraphCanvas.prototype.sendToBack = function (n) {
@@ -4300,7 +4495,7 @@ LGraphCanvas.prototype.drawBackCanvas = function () {
 
         //draw connections
 
-        for (var i = this.graph._subGraphs.length - 1; i >= 0; --i) {
+        for (var i = 0; i <this.graph._subGraphs.length; i++) {
             var subGraph = this.graph._subGraphs[i];
 
             //Draw
@@ -4330,9 +4525,9 @@ LGraphCanvas.prototype.drawSubGraph = function (subGraph, ctx) {
     var title_height = LiteGraph.NODE_TITLE_HEIGHT;
     var no_title = false
     subGraph.rect = subGraph.calculateSize()
-    subGraph.pos = subGraph.rect.pos
-    subGraph.size = subGraph.rect.size
-    var size = subGraph.size
+    //subGraph.pos = subGraph.rect.pos
+    //subGraph.size = subGraph.rect.size
+    var size = subGraph.rect.size
     ctx.save()
     ctx.fillStyle = "#555555";
     ctx.beginPath();
@@ -4370,17 +4565,16 @@ LGraphCanvas.prototype.drawSubGraph = function (subGraph, ctx) {
         ctx.fillText(subGraph.properties.name, 16, 13 - title_height);
     }
 
-    if(subGraph.selected)
-    {
+    if (subGraph.selected) {
         ctx.strokeStyle = LiteGraph.NODE_SELECTED_COLOR;
         ctx.strokeRect(-0.5, no_title ? -0.5 : -title_height + -0.5, size[0] + 2, no_title ? (size[1] + 2) : (size[1] + title_height + 2) - 1);
-         
+
     }
 
     ctx.restore()
 
-  
-    
+
+
 
     //canvas.graph.add(subGraph);
 }
@@ -4967,6 +5161,14 @@ LGraphCanvas.prototype.touchHandler = function (event) {
 //没有bind，用canvas传递了callback的this指针 2020.5.17
 LGraphCanvas.onMenuAddGrp = function (nodeList, e, prev_menu, canvas, first_event) {
     console.log("menu add grp")
+    var subGraph = LiteGraph.createSubGraph(canvas.selected_nodes, canvas.graph);
+    if (subGraph) {
+        canvas.graph._subGraphs.push(subGraph)
+        canvas.graph.setDirtyCanvas(true, true);
+        //subGraph.pos = canvas.convertEventToCanvas(first_event);
+
+    }
+    /*    
     var window = canvas.getCanvasWindow();
 
     var values = LiteGraph.getNodeTypesCategories();
@@ -4988,7 +5190,7 @@ LGraphCanvas.onMenuAddGrp = function (nodeList, e, prev_menu, canvas, first_even
 
         }
     }
-
+*/
     return false;
 }
 LGraphCanvas.onMenuAdd = function (node, e, prev_menu, canvas, first_event) {
@@ -5141,16 +5343,27 @@ LGraphCanvas.onMenuNodeShapes = function (node, e) {
 
 LGraphCanvas.onMenuNodeRemove = function (node) {
     if (node.removable == false) return;
-    
-    if(node.type =="subGraph"){
-        
-    node.graph.removeSubGraph(node)
+
+    if (node.type == "subGraph") {
+
+        node.graph.removeSubGraph(node)
     }
     else
-    node.graph.remove(node);
-    node.graph.sendActionToCanvas("setDirty", [true,true]);
-     
+        node.graph.remove(node);
+    node.graph.sendActionToCanvas("setDirty", [true, true]);
+
 }
+LGraphCanvas.onMenuSubgraphPrefab = function (node) {
+
+    LiteGraph.registerNodeType("subGraph/" + node.title, LGraphSubGraph)
+    vik.lo
+}
+
+function LGraphSubGraph() {
+    console.log("add subgraph prefab")
+
+}
+
 
 LGraphCanvas.onMenuNodeClone = function (node, e, menu, that) {
     //    var last_id = node.graph.last_node_id;
@@ -5273,7 +5486,9 @@ LGraphCanvas.prototype.getNodeMenuOptions = function (node) {
             options = extra.concat(options);
         }
     }
-
+    console.log(node)
+    if (node.type == "subGraph")
+        options.push({ content: "subgraph prefab", callback: LGraphCanvas.onMenuSubgraphPrefab });
     if (node.clonable !== false)
         options.push({ content: "Clone", callback: LGraphCanvas.onMenuNodeClone });
     if (node.removable !== false)
@@ -5675,7 +5890,7 @@ ShaderConstructor.createVertexCode = function (properties, albedo, normal, emiss
 
 ShaderConstructor.createFragmentCode = function (properties, albedo, normal, emission, specular, gloss, alpha, alphaclip, refraction, offset, sdfProc, sdfMaterialProc) {
 
-    console.log("sdfProc code:", sdfProc.fragment)
+    //console.log("sdfProc code:", sdfProc.fragment)
     var has_gloss = gloss.fragment.isCodeUsed();
     var has_albedo = albedo.fragment.isCodeUsed();
     var has_normal = normal.fragment.isCodeUsed();
@@ -6149,7 +6364,7 @@ vec3 render( in vec3 ro, in vec3 rd, float time )
     for (var i in sorted_map) {
         rr += "      " + sorted_map[i][1].str;
     }
-    console.log(rr)
+     
 
     /*
     if(has_alphaclip) {

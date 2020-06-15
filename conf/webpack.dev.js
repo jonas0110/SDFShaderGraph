@@ -13,6 +13,7 @@ module.exports = {
   mode: "production", //打包为开发模式   
  // 入口配置的对象中，属性为输出的js文件名，属性值为入口文件  
    entry: [    	
+     
         "./js/external/nodeSubGraph", 
        "./js/external/graphAndNode",   
        "./js/subgraph"

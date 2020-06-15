@@ -241,8 +241,10 @@ vik.ui = (function () {
     }
 
     function addButtons() {
-        addTopBarButton("load_graph","fa fa-upload","Load");
-        addTopBarButton("download_code","fa fa-download","Download", {download:"graph.json"});
+        addTopBarButton("load_graph","fa fa-upload","load graph");
+        addTopBarButton("load_subgraph","fa fa-upload","subGraph");
+        addTopBarButton("download_code","fa fa-download","save graph", {download:"graph.json"});
+        addTopBarButton("subGraph_code","fa fa-download","subGraph", {download:"subGraph.json"});
         addTopBarButton("live_update","fa fa-refresh fa-spin","Live Update", {div_class:"pressed"});
         addTopBarButton("apply","fa fa-check-circle","Apply");
         addTopBarButton("clean_graph","fa fa-trash-o","Clean Up");

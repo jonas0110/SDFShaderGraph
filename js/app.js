@@ -46,7 +46,7 @@ vik.app = (function () {
         window.addEventListener("load", vik.ui.init());
         loadContent();
         loadListeners();
-        var graph = getGraphFromURL() || 'graph.json';
+        var graph = getGraphFromURL() || 'graphs/graph.json';
         module.changeGraph(graph);
     }
 
@@ -333,11 +333,13 @@ vik.app = (function () {
             vik.ui.updateLeftPanel(node);
         }
 
-        gcanvas.onDropFile = function (data, filename, file) {
+        gcanvas.onDropFile = function (data, filename, file,pos) {
+            console.log("invoke:dropFile")
             var ext = LGraphCanvas.getFileExtension(filename);
             if (ext == "json") {
                 var obj = JSON.parse(data);
-                graph.configure(obj);
+                console.log("droped pos:",pos)
+                graph.addGraph(obj,true,pos);
                 main_node.mesh = obj.mesh;
                 vik.ui.reset();
             } else {
@@ -358,8 +360,10 @@ vik.app = (function () {
         function onComplete(data) {
             vik.ui.reset(graph._nodes);
         }
-        graph.loadFromURL("graphs/" + graph_name, onPreConfigure, onComplete);
+        console.log(graph_name)
+        graph.loadFromURL(graph_name, onPreConfigure, onComplete);
     }
+  
 
     function loadListeners() {
         console.log("load clicked")
@@ -416,6 +420,17 @@ vik.app = (function () {
              
             return true;
         });
+
+        var code_subGraph_downloader = document.getElementById("subGraph_code");
+        code_subGraph_downloader.addEventListener("click", function () {
+            var json = graph.serializeSubGraph();
+          
+            var data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(json));
+            this.href = data;
+             
+            return true;
+        });
+
 
         var live_update_el = document.getElementById("live_update");
         live_update_el.addEventListener("click", function () {
@@ -474,7 +489,7 @@ vik.app = (function () {
                 for (var i = list_nodes.length - 1; i >= 0; --i) {
                     list_nodes[i].addEventListener("click", function () {
                         var graph_name = this.id.toLowerCase();
-                        module.changeGraph(graph_name + ".json");
+                        module.changeGraph("graphs/" + graph_name + ".json");
                         w2popup.close();
 
                     });
@@ -483,12 +498,23 @@ vik.app = (function () {
 
 
             var request = new XMLHttpRequest();
-            request.open('GET', "graphs/list.txt");
+            
+            //request.open('GET', "graphs/",true);
+            request.open('get', "graphs/");
+            request.responseType = 'document';
+            //request.send();
             request.onreadystatechange = function () {
               
                 if (request.readyState == 4 ){//&& request.status == 200) {
-                    var txt = request.responseText.split(/\r?\n/);
+                    var names = Array.from(request.responseXML.getElementsByTagName('a'))
+                    names.splice(0,1)
                     
+                     var txt = names.map(value=>{
+              
+                       return value.href.split("/").slice(-1)[0].split(".").slice(0)[0]})
+                   
+                    //var txt = request.responseText.split(/\r?\n/);
+                     
                     var html = '<div class="dg"><ul id="popup-list">';
                     for (var i in txt) {
                         html += '<li class="cr function" id="' + txt[i] + '"> <span class="property-name">' + txt[i] + '</span></li>';
@@ -499,6 +525,70 @@ vik.app = (function () {
             }
             request.send();
         });
+
+
+        var subgraph_loader = document.getElementById("load_subgraph");
+        subgraph_loader.addEventListener("click", function () {
+            
+            function onComplete(list) {
+                
+                w2popup.open({
+                    title: 'Load subgraph',
+                    body: '<div class="w2ui-inner-popup">' + list + '</div>'
+                });
+
+                var list_nodes = document.getElementById("popup-list").childNodes;
+                for (var i = list_nodes.length - 1; i >= 0; --i) {
+                    list_nodes[i].addEventListener("click", function () {
+                        var graph_name = this.id.toLowerCase();
+                        
+                        HttpRequest("subgraphs/" + graph_name + ".json", null, function (data) {
+                         
+                        var obj = JSON.parse(data);
+                        console.log("json:",obj)
+                        graph.addGraph(obj,true,[0,0]);
+                        LiteGraph.dispatchEvent("contentChange", null, null);
+                        w2popup.close();
+                        });
+                         
+
+                       
+
+                        
+
+                    });
+                }
+            }
+
+            var request = new XMLHttpRequest();
+            
+             //request.open('GET', "graphs/",true);
+             request.open('get', "subgraphs/");
+             request.responseType = 'document';
+             //request.send();
+             request.onreadystatechange = function () {
+               
+                 if (request.readyState == 4 ){//&& request.status == 200) {
+                     var names = Array.from(request.responseXML.getElementsByTagName('a'))
+                     names.splice(0,1)
+                     
+                      var txt = names.map(value=>{
+               
+                        return value.href.split("/").slice(-1)[0].split(".").slice(0)[0]})
+                    
+                     //var txt = request.responseText.split(/\r?\n/);
+                      
+                     var html = '<div class="dg"><ul id="popup-list">';
+                     for (var i in txt) {
+                         html += '<li class="cr function" id="' + txt[i] + '"> <span class="property-name">' + txt[i] + '</span></li>';
+                     }
+                     html += '</ul></div>';
+                     onComplete(html);
+                 }
+             }
+             request.send();
+        });
+
 
         var info_but = document.getElementById("about");
         info_but.addEventListener("click", function () {
