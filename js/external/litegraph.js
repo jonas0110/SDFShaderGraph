@@ -203,8 +203,8 @@ var LiteGraph = {
                 categories[this.registered_node_types[i].category] = 1;
         var result = [];
         for (var i in categories)
-            if (i != "core")
-                result.push(i);
+            //  if (i != "core")
+            result.push(i);
         return result;
     },
 
@@ -1083,7 +1083,7 @@ LGraph.prototype.computeExecutionOrder = function () {
 
     //search for the nodes without inputs (starting nodes)
 
-  
+
     for (var i in this._nodes) {
         var n = this._nodes[i];
         M[n.id] = n; //add to pending nodes
@@ -1099,7 +1099,7 @@ LGraph.prototype.computeExecutionOrder = function () {
         else //num of input links
             remaining_links[n.id] = num;
     }
-    
+
     //整理s顺序
     var counter = 0;
     while (true) {
@@ -1234,10 +1234,10 @@ LGraph.prototype.add = function (node, skip_compute_order) {
         throw ("LiteGraph: max number of nodes in a graph reached");
 
     //give him an id
-    if (node.id == null || node.id == -1){
-        
+    if (node.id == null || node.id == -1) {
+
         node.id = this.last_node_id++;
-        console.log("rearange node id in new subGraph:",node.id)
+        console.log("rearange node id in new subGraph:", node.id)
     }
 
     node.graph = this;
@@ -1719,9 +1719,9 @@ LGraph.prototype.serializeSubGraph = function () {
         console.log(_subgraph)
         //remove data from links, we dont want to store it
         for (var i in _subgraph.links)
-             _subgraph.links[i].data = null;
+            _subgraph.links[i].data = null;
 
-       
+
         var data = {
             links: LiteGraph.cloneObject(_subgraph.links),
             nodes: nodes_info
@@ -1762,8 +1762,8 @@ LGraph.prototype.loadFromURL = function (url, on_pre_configure, on_complete, par
  * @method addGraph
  * @param {String} str configure a graph from a JSON string
  */
-LGraph.prototype.addGraph = function (data, keep_old,pos) {
-    console.log("add graph to pos:",pos)
+LGraph.prototype.addGraph = function (data, keep_old, pos) {
+    console.log("add graph to pos:", pos)
     var subGraphName = data.nodes[0].name;
     var nodes = data.nodes[0].nodes;
     var links = data.links;
@@ -1774,8 +1774,8 @@ LGraph.prototype.addGraph = function (data, keep_old,pos) {
     for (var i in nodes) {
         var n_info = nodes[i]; //stored info
         var node = LiteGraph.createNode(n_info.type, n_info.title);
-        console.log("add node from subgraph file:",n_info)
-        
+        console.log("add node from subgraph file:", n_info)
+
         if (!node) {
             if (LiteGraph.debug)
                 console.log("Node not found: " + n_info.type);
@@ -1787,81 +1787,80 @@ LGraph.prototype.addGraph = function (data, keep_old,pos) {
         node.id = -1
         node.pos = n_info.pos
         node = this.add(node, false); //add before configure, otherwise configure cannot create links
-        nodeidPairs.push({newid:node.id,
-        oldid:n_info.id
+        nodeidPairs.push({
+            newid: node.id,
+            oldid: n_info.id
         })
-        console.log("new node id:",node.id)
+        console.log("new node id:", node.id)
         tmpNodesForSubGraph.push(node)
         //links 应该是在这里配置
-        
-        
-    
-        
-        for(var link of links){
-        console.log("per link:",link)
-        for(var name of Object.keys(link))
-        for(var idPair of nodeidPairs)
-           {
-          if(link[name] == idPair.oldid)
-             link[name] = idPair.newid
-           }
-        
-             
-        this.last_link_id++
-        linkidPairs.push({oldid:link.id,newid:this.last_link_id})
-        link.id = this.last_link_id
-        this.links[this.last_link_id] = link
-        
+
+
+
+
+        for (var link of links) {
+            console.log("per link:", link)
+            for (var name of Object.keys(link))
+                for (var idPair of nodeidPairs) {
+                    if (link[name] == idPair.oldid)
+                        link[name] = idPair.newid
+                }
+
+
+            this.last_link_id++
+            linkidPairs.push({ oldid: link.id, newid: this.last_link_id })
+            link.id = this.last_link_id
+            this.links[this.last_link_id] = link
+
         }
-        console.log("node.inputs",node.inputs)
+        console.log("node.inputs", node.inputs)
 
 
-        for(var input of Object.keys(node.inputs)){
+        for (var input of Object.keys(node.inputs)) {
             var changed = false
-        for(var idPair of linkidPairs)
-            {
-                if(node.inputs[input].link == idPair.oldid){
-                   node.inputs[input].link = idPair.newid
-                console.log("changed",idPair)
-                changed = true
+            for (var idPair of linkidPairs) {
+                if (node.inputs[input].link == idPair.oldid) {
+                    node.inputs[input].link = idPair.newid
+                    console.log("changed", idPair)
+                    changed = true
                 }
             }
-            if(!changed)
-            node.inputs[input].link = null
+            if (!changed)
+                node.inputs[input].link = null
         }
-        console.log("node.inputs after",node.inputs)
-        console.log("node.outputs",node.outputs)
+        console.log("node.inputs after", node.inputs)
+        console.log("node.outputs", node.outputs)
 
-        for(var outputID in node.outputs){
+        for (var outputID in node.outputs) {
             var newlinks = []
 
-        for(var linkID in node.outputs[outputID].links)
-            
-        for(var idPair of linkidPairs)
-            {
-                if(node.outputs[outputID].links[linkID] == idPair.oldid){
-                   // node.outputs[outputID].links[linkID] = idPair.newid
-                    console.log("changed",idPair)}
+            for (var linkID in node.outputs[outputID].links)
+
+                for (var idPair of linkidPairs) {
+                    if (node.outputs[outputID].links[linkID] == idPair.oldid) {
+                        // node.outputs[outputID].links[linkID] = idPair.newid
+                        console.log("changed", idPair)
+                    }
                     newlinks.push(idPair.newid)
-            }
-        node.outputs[outputID].links = newlinks
+                }
+            node.outputs[outputID].links = newlinks
         }
-        
-        console.log("node.outputs after",node.outputs)
+
+        console.log("node.outputs after", node.outputs)
         //把加入的node做成一个subgraph
     }
     var newSubGraph = new nodeSubGraph(tmpNodesForSubGraph, this)
     newSubGraph.properties.name = subGraphName
-    console.log("add new subgraph:",newSubGraph)
-    for(var node of Object.values(newSubGraph.nodes)){
-        console.log("node:",node)
-     node.pos[0] += pos[0] - newSubGraph.rect.pos[0]
-     node.pos[1] += pos[1] - newSubGraph.rect.pos[1]
+    console.log("add new subgraph:", newSubGraph)
+    for (var node of Object.values(newSubGraph.nodes)) {
+        console.log("node:", node)
+        node.pos[0] += pos[0] - newSubGraph.rect.pos[0]
+        node.pos[1] += pos[1] - newSubGraph.rect.pos[1]
     }
     this._subGraphs.push(newSubGraph)
-        
-    
-    
+
+
+
     this.updateExecutionOrder();
     this.setDirtyCanvas(true, true);
     this.change();
@@ -1874,10 +1873,11 @@ LGraph.prototype.addGraph = function (data, keep_old,pos) {
  */
 LGraph.prototype.configure = function (data, keep_old) {
     console.log("config:", data)
-     
-    if (!keep_old){
+
+    if (!keep_old) {
         console.log("clear graph")
-        this.clear();}
+        this.clear();
+    }
 
     this.configuring = true;
     var nodes = data.nodes;
@@ -1910,7 +1910,7 @@ LGraph.prototype.configure = function (data, keep_old) {
         }
         else {
             var getNodesByID = []
-          
+
             for (var node of nodes[i].nodes)
                 for (var destNode of this._nodes)
                     if (destNode.id == node.id)
@@ -1921,7 +1921,7 @@ LGraph.prototype.configure = function (data, keep_old) {
             this._subGraphs.push(newSubGraph)
         }
     }
-    
+
     this.configuring = false;
     this.updateExecutionOrder();
     this.setDirtyCanvas(true, true);
@@ -2079,7 +2079,7 @@ LGraphNode.prototype.configure = function (info) {
 
     //FOR LEGACY, PLEASE REMOVE ON NEXT VERSION
     for (var i in this.inputs) {
-        console.log("load inputs:",this.inputs)
+     //   console.log("load inputs:", this.inputs)
         var input = this.inputs[i];
         if (!input.link || !input.link.length)
             continue;
@@ -2090,9 +2090,9 @@ LGraphNode.prototype.configure = function (info) {
         this.graph.links[link[0]] = { id: link[0], origin_id: link[1], origin_slot: link[2], target_id: link[3], target_slot: link[4] };
     }
 
-    console.log("load outputs:",this.outputs)
+ //   console.log("load outputs:", this.outputs)
     for (var i in this.outputs) {
-        
+
         var output = this.outputs[i];
         if (!output.links || output.links.length == 0)
             continue;
@@ -3364,7 +3364,7 @@ LGraphCanvas.prototype.setCanvas = function (canvas) {
         //            return;
 
         var file = e.dataTransfer.files[0];
-        
+
         var filename = file.name;
         var ext = LGraphCanvas.getFileExtension(filename);
         //console.log(file);
@@ -3376,9 +3376,9 @@ LGraphCanvas.prototype.setCanvas = function (canvas) {
             var data = event.target.result;
             if (node && node.onDropFile)
                 node.onDropFile(data, filename, file, null, gl);
-            if (that.onDropFile){
+            if (that.onDropFile) {
                 console.log("invoke:dropFile")
-                that.onDropFile(data, filename, file,pos);
+                that.onDropFile(data, filename, file, pos);
             }
             LiteGraph.dispatchEvent("contentChange", null, null);
 
@@ -3586,19 +3586,20 @@ LGraphCanvas.prototype.processMouseDown = function (e) {
 
         //when clicked on top of a node
         //and it is not interactive
-        if (n){
-        if (!this.live_mode && !n.flags.pinned){
-         
-        if(n.type != "subGraph") {
-            
-                this.bringToFront(n); //if it wasnt selected?
-                console.log("run bringtofront")
-            }
-        else{
-            this.bringToFrontForSubgraph(n); //if it wasnt selected?
-            console.log("run bringToFrontForSubgraph")
+        if (n) {
+            if (!this.live_mode && !n.flags.pinned) {
 
-        }}
+                if (n.type != "subGraph") {
+
+                    this.bringToFront(n); //if it wasnt selected?
+                    console.log("run bringtofront")
+                }
+                else {
+                    this.bringToFrontForSubgraph(n); //if it wasnt selected?
+                    console.log("run bringToFrontForSubgraph")
+
+                }
+            }
             var skip_action = false;
 
             //not dragging mouse to connect two slots
@@ -3634,9 +3635,9 @@ LGraphCanvas.prototype.processMouseDown = function (e) {
                     }
 
                 //Search for corner
-                if(n.pos == null){
-                n.pos = n.rect.pos
-                n.size = n.rect.size
+                if (n.pos == null) {
+                    n.pos = n.rect.pos
+                    n.size = n.rect.size
                 }
                 if (!skip_action && isInsideRectangle(e.canvasX, e.canvasY, n.pos[0] + n.size[0] - 5, n.pos[1] + n.size[1] - 5, 5, 5)) {
                     this.resizing_node = n;
@@ -4222,16 +4223,16 @@ LGraphCanvas.prototype.bringToFront = function (n) {
 }
 
 LGraphCanvas.prototype.bringToFrontForSubgraph = function (n) {
-    for(var nn of Object.keys(n.nodes)){
-    var i = this.graph._nodes.indexOf(n.nodes[nn]);
-   // if (i == -1) return;
-    console.log(i)
-    this.graph._nodes.splice(i, 1);
-    this.graph._nodes.push(n.nodes[nn]);
+    for (var nn of Object.keys(n.nodes)) {
+        var i = this.graph._nodes.indexOf(n.nodes[nn]);
+        // if (i == -1) return;
+        console.log(i)
+        this.graph._nodes.splice(i, 1);
+        this.graph._nodes.push(n.nodes[nn]);
     }
     i = this.graph._subGraphs.indexOf(n);
     console.log(i)
-   // if (i == -1) return;
+    // if (i == -1) return;
 
     this.graph._subGraphs.splice(i, 1);
     this.graph._subGraphs.push(n);
@@ -4495,7 +4496,7 @@ LGraphCanvas.prototype.drawBackCanvas = function () {
 
         //draw connections
 
-        for (var i = 0; i <this.graph._subGraphs.length; i++) {
+        for (var i = 0; i < this.graph._subGraphs.length; i++) {
             var subGraph = this.graph._subGraphs[i];
 
             //Draw
@@ -5826,7 +5827,7 @@ ShaderConstructor.createVertexCode = function (properties, albedo, normal, emiss
         "attribute vec3 a_vertex;\n" +
         "attribute vec3 a_normal;\n" +
         "attribute vec2 a_coord;\n";
-    if (albedo.vertex.isLineIncluded("v_coord"))
+    if (albedo && albedo.vertex.isLineIncluded("v_coord"))
         r += "varying vec2 v_coord;\n";
     //if (includes["v_normal"] || normal != LiteGraph.EMPTY_CODE)
     r += "varying vec3 v_normal;\n";
@@ -5834,7 +5835,7 @@ ShaderConstructor.createVertexCode = function (properties, albedo, normal, emiss
     r += "varying vec3 v_pos;\n";
     //if (albedo.vertex.isLineIncluded("u_time"))
     r += "uniform float u_time;\n";
-    if (albedo.vertex.isLineIncluded("u_frame_time"))
+    if (albedo && albedo.vertex.isLineIncluded("u_frame_time"))
         r += "uniform float u_frame_time;\n";
     //if (includes["u_eye"])
     r += "uniform vec3 u_eye;\n";
@@ -5845,36 +5846,38 @@ ShaderConstructor.createVertexCode = function (properties, albedo, normal, emiss
     r += "uniform vec4 u_light_color;\n";
     r += "uniform float u_alpha_threshold;\n";
 
-
-    var h = albedo.vertex.getHeader();
-    for (var id in h)
-        r += h[id];
-
+    if (albedo) {
+        var h = albedo.vertex.getHeader();
+        for (var id in h)
+            r += h[id];
+    }
 
     // body
     r += "void main() {\n";
-    if (albedo.vertex.isLineIncluded("v_coord"))
+    if (albedo && albedo.vertex.isLineIncluded("v_coord"))
         r += "      v_coord = a_coord;\n";
     r += "      v_normal = (u_model * vec4(a_normal, 0.0)).xyz;\n";
     r += "      vec3 pos = a_vertex;\n";
-    if (albedo.vertex.isLineIncluded("depth")) {
+    if (albedo && albedo.vertex.isLineIncluded("depth")) {
         r += "      vec4 pos4 = (u_model * vec4(pos,1.0));\n";
         r += "      float depth = pos4.z / pos4.w;\n";
     }
 
-    if (albedo.vertex.isLineIncluded("view_dir"))
+    if (albedo && albedo.vertex.isLineIncluded("view_dir"))
         r += "      vec3 view_dir = normalize(v_pos - u_eye);\n" +
             "      vec3 light_dir = normalize(u_light_dir);\n" +
             "      vec3 half_dir = normalize(view_dir + light_dir);\n";
 
-    var body_hash = albedo.vertex.getBody();
-    var sorted_map = sortMapByValue(body_hash);
-    for (var i in sorted_map) {
-        r += "      " + sorted_map[i][1].str;
-        //console.log(sorted_map[i][1].str +" "+    sorted_map[i][1].order);
+    if (albedo) {
+        var body_hash = albedo.vertex.getBody();
+        var sorted_map = sortMapByValue(body_hash);
+        for (var i in sorted_map) {
+            r += "      " + sorted_map[i][1].str;
+            //console.log(sorted_map[i][1].str +" "+    sorted_map[i][1].order);
+        }
     }
 
-    if (offset.getOutputVar()) {
+    if (offset && offset.getOutputVar()) {
         r += "      pos += a_normal * " + offset.getOutputVar() + ";\n";
     }
 
@@ -5891,16 +5894,17 @@ ShaderConstructor.createVertexCode = function (properties, albedo, normal, emiss
 ShaderConstructor.createFragmentCode = function (properties, albedo, normal, emission, specular, gloss, alpha, alphaclip, refraction, offset, sdfProc, sdfMaterialProc) {
 
     //console.log("sdfProc code:", sdfProc.fragment)
+    /*
     var has_gloss = gloss.fragment.isCodeUsed();
     var has_albedo = albedo.fragment.isCodeUsed();
     var has_normal = normal.fragment.isCodeUsed();
     var has_specular = specular.fragment.isCodeUsed();
     var has_emission = emission.fragment.isCodeUsed();
-
     var has_alpha = alpha.fragment.isCodeUsed();
     var has_alphaclip = alphaclip.fragment.isCodeUsed();
     var has_refraction = refraction.fragment.isCodeUsed();
-    var has_sdfProc = sdfProc.fragment.isCodeUsed();
+*/
+
     //    var includes = albedo.fragment.includes;
     //    for (var line in albedo.fragment.includes) { includes[line] = 1; }
     //    for (var line in normal.fragment.includes) { includes[line] = 1; }
@@ -5909,14 +5913,14 @@ ShaderConstructor.createFragmentCode = function (properties, albedo, normal, emi
     //    for (var line in gloss.fragment.includes) { includes[line] = 1; }
     //    for (var line in alpha.fragment.includes) { includes[line] = 1; }
     //    for (var line in offset.fragment.includes) { includes[line] = 1; }
-    if (albedo.fragment !== LiteGraph.EMPTY_CODE.fragment)
+    if (albedo && albedo.fragment !== LiteGraph.EMPTY_CODE.fragment)
         albedo.fragment.addHeaderLine("uniform samplerCube u_cube_default_texture;\n");
 
 
     // header
     var r = "#extension GL_OES_standard_derivatives : enable\n" +
         "precision mediump float;\n";
-    if (albedo.fragment.isLineIncluded("v_coord"))
+    if (albedo && albedo.fragment.isLineIncluded("v_coord"))
         r += "varying vec2 v_coord;\n";
     //if (includes["v_normal"] || normal != LiteGraph.EMPTY_CODE )
     r += "varying vec3 v_normal;\n";
@@ -5924,7 +5928,7 @@ ShaderConstructor.createFragmentCode = function (properties, albedo, normal, emi
     r += "varying vec3 v_pos;\n";
     //if (albedo.fragment.isLineIncluded("u_time"))
     r += "uniform float u_time;\n";
-    if (albedo.fragment.isLineIncluded("u_frame_time"))
+    if (albedo && albedo.fragment.isLineIncluded("u_frame_time"))
         r += "uniform float u_frame_time;\n";
     //if (includes["u_eye"])
     r += "uniform vec3 u_eye;\n";
@@ -5935,13 +5939,14 @@ ShaderConstructor.createFragmentCode = function (properties, albedo, normal, emi
     r += "uniform vec3 u_camera_target;\n";
     r += "uniform vec3 u_camera_pos;\n";
     r += "uniform vec2 iResolution;\n";
-
-    var h = albedo.fragment.getHeader();
-    for (var id in h)
-        r += h[id];
+    if (albedo) {
+        var h = albedo.fragment.getHeader();
+        for (var id in h)
+            r += h[id];
+    }
 
     // http://www.thetenthplanet.de/archives/1180
-    if (albedo.fragment.isLineIncluded("TBN")) {
+    if (albedo && albedo.fragment.isLineIncluded("TBN")) {
         r += "\nmat3 computeTBN(){\n" +
             "      vec3 dp1 = dFdx( v_pos );\n" +
             "      vec3 dp2 = dFdy( v_pos );\n" +
@@ -6055,7 +6060,7 @@ vec4 map( in vec3 pos, float atime )
     href = q.y;
     //q.yz = vec2( dot(uu,q.yz), dot(vv,q.yz) );
     `
-
+    
     var rr = ""
     varsdfbodyhash = sdfProc.fragment.getBody()
     var varsdfbodyhashmap = sortMapByValue(varsdfbodyhash);
@@ -6066,14 +6071,7 @@ vec4 map( in vec3 pos, float atime )
     r += rr;
     r += "vec4 res =" + sdfProc.getOutputVar() + ";\n";
     r += `
-    /*
-    vec4 res = vec4( sdEllipsoid( q, vec3(0.25, 
-        0.25,
-        //0.25*sy,
-        0.25 
-        //0.25*sz
-        ) ), 2.0, 0.0, 1.0 );
-        */
+     
     // head
     vec3 h = r;
     float hr = sin(0.791*atime);
@@ -6083,39 +6081,8 @@ vec4 map( in vec3 pos, float atime )
     float d  = sdEllipsoid( h-vec3(0.0,0.20,0.02), vec3(0.08,0.2,0.15) );
     float d2 = sdEllipsoid( h-vec3(0.0,0.21,-0.1), vec3(0.20,0.2,0.20) );
     d = smin( d, d2, 0.1 );
-    //res.x = smin( res.x, d, 0.1 );
-    /*
-    // ears
-    {
-    float t3 = fract(atime+0.9);
-    float p3 = 4.0*t3*(1.0-t3);
-    vec2 ear = sdStick( hq, vec3(0.15,0.32,-0.05), vec3(0.2+0.05*p3,0.2+0.2*p3,-0.07), 0.01, 0.04 );
-    res.xz = smin2( res.xz, ear, 0.01 );
-    }
     
-    // mouth
-    {
-    d = sdEllipsoid( h-vec3(0.0,0.15+4.0*hq.x*hq.x,0.15), vec3(0.1,0.04,0.2) );
-    res.w = 0.3+0.7*clamp( d*150.0,0.0,1.0);
-    res.x = smax( res.x, -d, 0.03 );
-    }
-    
-    // eye
-    {
-    float blink = pow(0.5+0.5*sin(2.1*atime),20.0);
-    float eyeball = sdSphere(hq-vec3(0.08,0.27,0.06),0.065+0.02*blink);
-    res.x = smin( res.x, eyeball, 0.03 );
-    
-    vec3 cq = hq-vec3(0.1,0.34,0.08);
-    cq.xy = mat2(0.8,0.6,-0.6,0.8)*cq.xy;
-    d = sdEllipsoid( cq, vec3(0.06,0.03,0.03) );
-    res.x = smin( res.x, d, 0.03 );
-
-    float eo = 1.0-0.5*smoothstep(0.01,0.04,length((hq.xy-vec2(0.095,0.285))*vec2(1.0,1.1)));
-    res = opU( res, vec4(sdSphere(hq-vec3(0.08,0.28,0.08),0.060),3.0,0.0,eo));
-    res = opU( res, vec4(sdSphere(hq-vec3(0.075,0.28,0.102),0.0395),4.0,0.0,1.0));
-    }
-    */
+   
     // ground
     float fh = -0.1 - 0.05*(sin(pos.x*2.0)+sin(pos.z*2.0));
     float t5f = fract(atime+0.05);
@@ -6330,8 +6297,6 @@ vec3 render( in vec3 ro, in vec3 rd, float time )
     
     return col;
 
-    
-
 }
  
     `;
@@ -6358,13 +6323,14 @@ vec3 render( in vec3 ro, in vec3 rd, float time )
 
     */
     //包括
-    var rr = "albedo:\n"
-    var body_hash = albedo.fragment.getBody();
-    var sorted_map = sortMapByValue(body_hash);
-    for (var i in sorted_map) {
-        rr += "      " + sorted_map[i][1].str;
+    if(albedo){
+        var rr = "albedo:\n"
+        var body_hash = albedo.fragment.getBody();
+        var sorted_map = sortMapByValue(body_hash);
+        for (var i in sorted_map) {
+            rr += "      " + sorted_map[i][1].str;
+        }
     }
-     
 
     /*
     if(has_alphaclip) {

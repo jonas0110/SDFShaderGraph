@@ -147,6 +147,7 @@ vik.app = (function () {
 
         node_grid = new EZ.EMesh();
         node_grid.mesh = "grid";
+        node_grid.visible = false;
         node_grid.flags.primitive = gl.LINES;
         node_grid.scale = [50, 50, 50];
         scene.addChild(node_grid);
